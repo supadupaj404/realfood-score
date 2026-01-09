@@ -2,7 +2,7 @@
   "name": "Real Food Score",
   "short_name": "Food Score",
   "description": "Scan barcodes to see how real your food is. Based on MAHA priorities.",
-  "start_url": "/app.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#F3F0D6",
   "theme_color": "#1E3A2F",
@@ -26,7 +26,7 @@
   "shortcuts": [
     {
       "name": "Scan Barcode",
-      "url": "/app.html",
+      "url": "/",
       "description": "Scan a product barcode"
     }
   ]
