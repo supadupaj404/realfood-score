@@ -1243,7 +1243,8 @@
         // ============================================================
 
         const USDA_API_BASE = 'https://api.nal.usda.gov/fdc/v1';
-        let usdaApiKey = localStorage.getItem('usda_api_key') || '';
+        const DEFAULT_USDA_KEY = 'sITpktEZSmwf2qG1Yez3bpxdpvL3xjLvHFHxkCPI';
+        let usdaApiKey = localStorage.getItem('usda_api_key') || DEFAULT_USDA_KEY;
 
         // Settings panel handlers
         const settingsToggle = document.getElementById('settings-toggle');
