@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Food Score | MAHA Analyzer</title>
+    <style>
+        :root {
+            --green: #22c55e;
+            --yellow: #eab308;
+            --orange: #f97316;
+            --red: #ef4444;
+            --dark: #1a1a1a;
+            --muted: #6b7280;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafaf9;
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 2rem; }
+        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--muted); font-size: 0.95rem; }
+
+        .input-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: var(--dark);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.85; }
+
+        .results { display: none; }
+        .results.visible { display: block; }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .score-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .score-card.rfk { border-top: 4px solid #dc2626; }
+        .score-card.guideline { border-top: 4px solid #2563eb; }
+        .score-card.practical { border-top: 4px solid #16a34a; }
+
+        .score-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-value { font-size: 2.5rem; font-weight: 700; line-height: 1; }
+        .score-grade { font-size: 1.5rem; font-weight: 700; margin-top: 0.25rem; }
+
+        .grade-A { color: var(--green); }
+        .grade-B { color: #84cc16; }
+        .grade-C { color: var(--yellow); }
+        .grade-D { color: var(--orange); }
+        .grade-F { color: var(--red); }
+
+        .score-desc { font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; }
+
+        .details-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .flags { margin-bottom: 1rem; }
+
+        .flag {
+            display: inline-block;
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 0.25rem 0.25rem 0.25rem 0;
+        }
+
+        .clean-badge {
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .recommendations { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e5e5; }
+        .rec-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; }
+
+        .recommendation {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+
+        .rec-arrow { color: var(--green); font-weight: bold; }
+
+        .ingredients-list { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e5e5; }
+        .ing-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; }
+
+        .ingredient-item {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            margin: 0.15rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .ingredient-item.whole { background: #dcfce7; color: #166534; }
+        .ingredient-item.flagged { background: #fee2e2; color: #dc2626; }
+        .ingredient-item.neutral { background: #f3f4f6; color: #4b5563; }
+
+        .examples { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e5e5; }
+        .examples-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
+
+        .example-btn {
+            background: #f3f4f6;
+            color: var(--dark);
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            margin: 0.25rem;
+            border-radius: 6px;
+        }
+
+        .example-btn:hover { background: #e5e7eb; }
+
+        footer { text-align: center; margin-top: 2rem; color: var(--muted); font-size: 0.85rem; }
+        footer a { color: var(--muted); }
+
+        @media (max-width: 640px) { .scores-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Real Food Score</h1>
+            <p class="subtitle">Three-tier scoring based on realfood.gov guidelines & RFK Jr.'s MAHA priorities</p>
+        </header>
+
+        <div class="input-section">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <div style="flex: 1;">
+                    <label for="barcode">Barcode (UPC/EAN)</label>
+                    <input type="text" id="barcode" placeholder="e.g., 049000006346" style="margin-bottom: 0;">
+                </div>
+                <div style="align-self: flex-end;">
+                    <button onclick="lookupBarcode()" style="margin-top: 0; background: #2563eb;">Lookup</button>
+                </div>
+            </div>
+            <div style="text-align: center; color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem;">— or enter manually —</div>
+
+            <label for="product-name">Product Name</label>
+            <input type="text" id="product-name" placeholder="e.g., Heinz Ketchup">
+
+            <label for="ingredients">Ingredient List</label>
+            <textarea id="ingredients" placeholder="Paste ingredient list here, separated by commas..."></textarea>
+
+            <button onclick="analyzeProduct()">Analyze Product</button>
+
+            <div class="examples">
+                <div class="examples-label">Try an example:</div>
+                <button class="example-btn" onclick="loadExample('eggs')">Fresh Eggs</button>
+                <button class="example-btn" onclick="loadExample('ketchup')">Heinz Ketchup</button>
+                <button class="example-btn" onclick="loadExample('doritos')">Doritos</button>
+                <button class="example-btn" onclick="loadExample('raos')">Rao's Marinara</button>
+                <button class="example-btn" onclick="loadExample('frootloops')">Froot Loops</button>
+            </div>
+        </div>
+
+        <div class="results" id="results">
+            <div class="scores-grid">
+                <div class="score-card rfk">
+                    <div class="score-label">MAHA Score</div>
+                    <div class="score-value" id="rfk-score">--</div>
+                    <div class="score-grade" id="rfk-grade">-</div>
+                    <div class="score-desc">RFK Jr.'s priorities</div>
+                </div>
+                <div class="score-card guideline">
+                    <div class="score-label">Guideline</div>
+                    <div class="score-value" id="guideline-score">--</div>
+                    <div class="score-grade" id="guideline-grade">-</div>
+                    <div class="score-desc">Official standard</div>
+                </div>
+                <div class="score-card practical">
+                    <div class="score-label">Practical</div>
+                    <div class="score-value" id="practical-score">--</div>
+                    <div class="score-grade" id="practical-grade">-</div>
+                    <div class="score-desc">Better choice</div>
+                </div>
+            </div>
+
+            <div class="details-section">
+                <div class="flags" id="flags"></div>
+                <div class="recommendations" id="recommendations"></div>
+                <div class="ingredients-list" id="ingredients-list"></div>
+            </div>
+        </div>
+
+        <footer>
+            Based on <a href="https://realfood.gov">realfood.gov</a> 2025 Dietary Guidelines
+        </footer>
+    </div>
+
+    <script>
+        // Barcode lookup via Open Food Facts API
+        async function lookupBarcode() {
+            const barcode = document.getElementById('barcode').value.trim().replace(/\D/g, '');
+            if (!barcode) { alert('Please enter a barcode'); return; }
+
+            const btn = document.querySelector('button[onclick="lookupBarcode()"]');
+            btn.textContent = 'Loading...';
+            btn.disabled = true;
+
+            try {
+                const url = 'https://world.openfoodfacts.org/api/v2/product/' + barcode + '.json';
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.status !== 1 || !data.product) {
+                    alert('Product not found in Open Food Facts database');
+                    return;
+                }
+
+                const product = data.product;
+                document.getElementById('product-name').value = product.product_name || 'Unknown Product';
+                document.getElementById('ingredients').value = product.ingredients_text || '';
+
+                if (!product.ingredients_text) {
+                    alert('Product found but no ingredient data available');
+                } else {
+                    analyzeProduct();
+                }
+            } catch (e) {
+                alert('Error looking up barcode: ' + e.message);
+            } finally {
+                btn.textContent = 'Lookup';
+                btn.disabled = false;
+            }
+        }
+
+        const examples = {
+            eggs: { name: "Fresh Eggs", ingredients: "eggs" },
+            ketchup: { name: "Heinz Ketchup", ingredients: "tomato concentrate, distilled vinegar, high fructose corn syrup, corn syrup, salt, spice, onion powder, natural flavoring" },
+            doritos: { name: "Doritos Nacho Cheese", ingredients: "corn, vegetable oil, maltodextrin, salt, cheddar cheese, whey, monosodium glutamate, buttermilk, romano cheese, onion powder, corn flour, natural and artificial flavors, dextrose, tomato powder, spices, artificial color red 40, yellow 6, yellow 5, blue 1, lactic acid, citric acid, sugar" },
+            raos: { name: "Rao's Marinara", ingredients: "tomatoes, olive oil, onions, salt, garlic, basil, black pepper, oregano" },
+            frootloops: { name: "Froot Loops", ingredients: "corn flour blend, sugar, wheat flour, oat fiber, modified food starch, vegetable oil, salt, red 40, natural flavor, blue 2, turmeric color, yellow 6, blue 1" }
+        };
+
+        function loadExample(key) {
+            document.getElementById('product-name').value = examples[key].name;
+            document.getElementById('ingredients').value = examples[key].ingredients;
+            analyzeProduct();
+        }
+
+        function analyzeProduct() {
+            const name = document.getElementById('product-name').value || 'Unknown Product';
+            const ingredients = document.getElementById('ingredients').value;
+            if (!ingredients.trim()) { alert('Please enter ingredients'); return; }
+            const result = scoreProduct(name, ingredients);
+            displayResults(result);
+        }
+
+        function displayResults(result) {
+            document.getElementById('results').classList.add('visible');
+            const scores = result.scores;
+
+            // Update score cards using textContent (safe)
+            document.getElementById('rfk-score').textContent = scores.rfk.score.toFixed(0);
+            document.getElementById('rfk-grade').textContent = scores.rfk.grade;
+            document.getElementById('rfk-grade').className = 'score-grade grade-' + scores.rfk.grade;
+
+            document.getElementById('guideline-score').textContent = scores.guideline.score.toFixed(0);
+            document.getElementById('guideline-grade').textContent = scores.guideline.grade;
+            document.getElementById('guideline-grade').className = 'score-grade grade-' + scores.guideline.grade;
+
+            document.getElementById('practical-score').textContent = scores.practical.score.toFixed(0);
+            document.getElementById('practical-grade').textContent = scores.practical.grade;
+            document.getElementById('practical-grade').className = 'score-grade grade-' + scores.practical.grade;
+
+            // Update flags using DOM methods (safe)
+            const flagsContainer = document.getElementById('flags');
+            flagsContainer.replaceChildren(); // Clear existing
+            if (result.flags.length > 0) {
+                result.flags.forEach(f => {
+                    const span = document.createElement('span');
+                    span.className = 'flag';
+                    span.textContent = f;
+                    flagsContainer.appendChild(span);
+                });
+            } else {
+                const span = document.createElement('span');
+                span.className = 'clean-badge';
+                span.textContent = '✓ No flags - clean ingredients!';
+                flagsContainer.appendChild(span);
+            }
+
+            // Update recommendations using DOM methods (safe)
+            const recsContainer = document.getElementById('recommendations');
+            recsContainer.replaceChildren();
+            if (result.recommendations.length > 0) {
+                const title = document.createElement('div');
+                title.className = 'rec-title';
+                title.textContent = 'Recommendations:';
+                recsContainer.appendChild(title);
+
+                result.recommendations.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'recommendation';
+                    const arrow = document.createElement('span');
+                    arrow.className = 'rec-arrow';
+                    arrow.textContent = '→';
+                    const text = document.createElement('span');
+                    text.textContent = r;
+                    div.appendChild(arrow);
+                    div.appendChild(text);
+                    recsContainer.appendChild(div);
+                });
+            }
+
+            // Update ingredients list using DOM methods (safe)
+            const ingContainer = document.getElementById('ingredients-list');
+            ingContainer.replaceChildren();
+            const ingTitle = document.createElement('div');
+            ingTitle.className = 'ing-title';
+            ingTitle.textContent = 'Ingredients analyzed:';
+            ingContainer.appendChild(ingTitle);
+
+            result.ingredients_analyzed.forEach(i => {
+                const span = document.createElement('span');
+                let cls = 'neutral';
+                if (i.flagged) cls = 'flagged';
+                else if (i.whole_food) cls = 'whole';
+                span.className = 'ingredient-item ' + cls;
+                span.textContent = i.name;
+                ingContainer.appendChild(span);
+            });
+        }
+
+        // Ingredient classification sets
+        const ADDED_SUGARS = new Set(["sugar", "cane sugar", "brown sugar", "raw sugar", "powdered sugar", "high fructose corn syrup", "hfcs", "corn syrup", "maple syrup", "agave syrup", "agave nectar", "rice syrup", "brown rice syrup", "glucose", "fructose", "dextrose", "sucrose", "maltose", "fruit juice concentrate", "molasses", "maltodextrin", "honey"]);
+        const INDUSTRIAL_OILS = new Set(["vegetable oil", "soybean oil", "canola oil", "corn oil", "sunflower oil", "safflower oil", "cottonseed oil", "grapeseed oil", "hydrogenated oil", "partially hydrogenated oil", "shortening"]);
+        const ARTIFICIAL_PRESERVATIVES = new Set(["bha", "bht", "tbhq", "sodium benzoate", "potassium benzoate", "sodium nitrate", "sodium nitrite", "calcium propionate", "potassium sorbate", "edta", "disodium edta"]);
+        const ARTIFICIAL_FLAVORS = new Set(["artificial flavor", "artificial flavors", "artificial flavoring", "natural and artificial flavors", "msg", "monosodium glutamate"]);
+        const ARTIFICIAL_COLORS = new Set(["red 40", "red 3", "yellow 5", "yellow 6", "blue 1", "blue 2", "green 3", "caramel color", "artificial color"]);
+        const REFINED_GRAINS = new Set(["enriched flour", "enriched wheat flour", "bleached flour", "white flour", "modified food starch", "modified starch"]);
+        const WHOLE_FOODS = new Set(["chicken", "beef", "pork", "fish", "salmon", "eggs", "egg", "milk", "cream", "butter", "cheese", "yogurt", "tomato", "tomatoes", "onion", "onions", "garlic", "carrot", "celery", "peppers", "broccoli", "spinach", "potato", "apple", "banana", "orange", "lemon", "berries", "whole wheat", "oats", "brown rice", "quinoa", "almonds", "walnuts", "peanuts", "olive oil", "salt", "sea salt", "pepper", "basil", "oregano", "water", "vinegar"]);
+
+        const PENALTIES = {
+            rfk: { added_sugar_first: 20, added_sugar_additional: 4, industrial_oil_first: 30, industrial_oil_additional: 8, preservative_first: 18, preservative_additional: 5, artificial_flavor: 20, artificial_color_first: 35, artificial_color_additional: 8, refined_grain: 8 },
+            guideline: { added_sugar_first: 25, added_sugar_additional: 5, industrial_oil_first: 20, industrial_oil_additional: 5, preservative_first: 15, preservative_additional: 5, artificial_flavor: 15, artificial_color_first: 15, artificial_color_additional: 3, refined_grain: 10 },
+            practical: { added_sugar_first: 12, added_sugar_additional: 3, industrial_oil_first: 10, industrial_oil_additional: 3, preservative_first: 8, preservative_additional: 3, artificial_flavor: 10, artificial_color_first: 15, artificial_color_additional: 3, refined_grain: 5 }
+        };
+
+        function classifyIngredient(name) {
+            const lower = name.toLowerCase().trim();
+            return {
+                name: name.trim(),
+                is_added_sugar: [...ADDED_SUGARS].some(s => lower.includes(s)),
+                is_industrial_oil: [...INDUSTRIAL_OILS].some(s => lower.includes(s)),
+                is_artificial_preservative: [...ARTIFICIAL_PRESERVATIVES].some(s => lower.includes(s)),
+                is_artificial_flavor: [...ARTIFICIAL_FLAVORS].some(s => lower.includes(s)),
+                is_artificial_color: [...ARTIFICIAL_COLORS].some(s => lower.includes(s)),
+                is_refined_grain: [...REFINED_GRAINS].some(s => lower.includes(s)),
+                is_whole_food: [...WHOLE_FOODS].some(s => lower.includes(s))
+            };
+        }
+
+        function parseIngredients(str) {
+            const cleaned = str.replace(/\([^)]*\)/g, '');
+            return cleaned.split(',').map(i => i.trim()).filter(i => i).map(classifyIngredient);
+        }
+
+        function scoreIngredientCount(count) {
+            if (count <= 5) return 100;
+            if (count <= 10) return 100 - (count - 5) * 4;
+            if (count <= 15) return 80 - (count - 10) * 4;
+            if (count <= 20) return 60 - (count - 15) * 4;
+            return Math.max(0, 40 - (count - 20) * 2);
+        }
+
+        function scoreFlagged(ingredients, penalties) {
+            let penalty = 0;
+            const flags = [];
+            const sugars = ingredients.filter(i => i.is_added_sugar).length;
+            const oils = ingredients.filter(i => i.is_industrial_oil).length;
+            const preservatives = ingredients.filter(i => i.is_artificial_preservative).length;
+            const flavors = ingredients.filter(i => i.is_artificial_flavor).length;
+            const colors = ingredients.filter(i => i.is_artificial_color).length;
+            const grains = ingredients.filter(i => i.is_refined_grain).length;
+
+            if (sugars) { penalty += penalties.added_sugar_first + (sugars - 1) * penalties.added_sugar_additional; flags.push('Contains ' + sugars + ' added sugar(s)'); }
+            if (oils) { penalty += penalties.industrial_oil_first + (oils - 1) * penalties.industrial_oil_additional; flags.push('Contains ' + oils + ' industrial oil(s)'); }
+            if (preservatives) { penalty += penalties.preservative_first + (preservatives - 1) * penalties.preservative_additional; flags.push('Contains ' + preservatives + ' artificial preservative(s)'); }
+            if (flavors) { penalty += penalties.artificial_flavor; flags.push('Contains artificial flavors'); }
+            if (colors) { penalty += penalties.artificial_color_first + (colors - 1) * penalties.artificial_color_additional; flags.push('Contains ' + colors + ' artificial color(s)'); }
+            if (grains) { penalty += penalties.refined_grain; flags.push('Contains refined grains'); }
+
+            return { score: Math.max(0, 100 - penalty), flags: flags };
+        }
+
+        function scoreWholeFood(ingredients) {
+            if (!ingredients.length) return 0;
+            return (ingredients.filter(i => i.is_whole_food).length / ingredients.length) * 100;
+        }
+
+        function calculateGrade(score) {
+            if (score >= 90) return 'A';
+            if (score >= 80) return 'B';
+            if (score >= 70) return 'C';
+            if (score >= 60) return 'D';
+            return 'F';
+        }
+
+        function scoreProduct(name, ingredientString) {
+            const ingredients = parseIngredients(ingredientString);
+            const countScore = scoreIngredientCount(ingredients.length);
+            const wholeScore = scoreWholeFood(ingredients);
+
+            const rfkFlagged = scoreFlagged(ingredients, PENALTIES.rfk);
+            const guideFlagged = scoreFlagged(ingredients, PENALTIES.guideline);
+            const practicalFlagged = scoreFlagged(ingredients, PENALTIES.practical);
+
+            const calcTotal = (flagged) => countScore * 0.25 + flagged * 0.50 + wholeScore * 0.25;
+
+            const recommendations = [];
+            if (guideFlagged.flags.some(f => f.includes('sugar'))) recommendations.push('Look for unsweetened alternatives');
+            if (guideFlagged.flags.some(f => f.includes('oil'))) recommendations.push('Choose products with olive oil, butter, or avocado oil');
+            if (guideFlagged.flags.some(f => f.includes('artificial'))) recommendations.push('Seek products with simple, recognizable ingredients');
+
+            return {
+                product: name,
+                ingredient_count: ingredients.length,
+                scores: {
+                    rfk: { score: calcTotal(rfkFlagged.score), grade: calculateGrade(calcTotal(rfkFlagged.score)) },
+                    guideline: { score: calcTotal(guideFlagged.score), grade: calculateGrade(calcTotal(guideFlagged.score)) },
+                    practical: { score: calcTotal(practicalFlagged.score), grade: calculateGrade(calcTotal(practicalFlagged.score)) }
+                },
+                flags: guideFlagged.flags,
+                recommendations: recommendations,
+                ingredients_analyzed: ingredients.map(i => ({ name: i.name, whole_food: i.is_whole_food, flagged: i.is_added_sugar || i.is_industrial_oil || i.is_artificial_preservative || i.is_artificial_flavor || i.is_artificial_color }))
+            };
+        }
+    </script>
+</body>
+</html>
